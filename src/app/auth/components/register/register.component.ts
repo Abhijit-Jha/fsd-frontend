@@ -7,7 +7,7 @@ import {
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../services/auth.service';
+import { AuthService, SignupRequest, SignupResponse } from '../../services/auth.service';
 
 @Component({
   selector: 'app-register',
@@ -70,38 +70,24 @@ export class RegisterComponent implements OnInit {
     this.errorMessage = '';
 
     const { name, email, password, clg_name, phone_no } = this.registerForm.value;
-
-    console.log('Submitting registration form:', {
+    const signupData: SignupRequest = {
       name,
       email,
-      password: '****',
+      password,
       clg_name,
       phone_no,
-    });
+    };
 
-    this.authService.register(name, email, password, clg_name, phone_no).subscribe({
-      next: (response) => {
+    this.authService.signup(signupData).subscribe({
+      next: (response: SignupResponse) => {
         console.log('Registration successful', response);
         this.isSubmitting = false;
-
-        // Show success message before redirecting
-        setTimeout(() => {
-          this.router.navigate(['/dashboard']);
-        }, 1000);
+        this.router.navigate(['/login']);
       },
-      error: (error) => {
+      error: (error: Error) => {
         console.error('Registration error:', error);
         this.isSubmitting = false;
-
-        if (typeof error === 'string') {
-          this.errorMessage = error;
-        } else if (error instanceof Error) {
-          this.errorMessage = error.message;
-        } else if (error?.status === 400) {
-          this.errorMessage = 'User with this email already exists';
-        } else {
-          this.errorMessage = 'Registration failed. Please try again later.';
-        }
+        this.errorMessage = error.message || 'Registration failed. Please try again later.';
       },
     });
   }

@@ -10,150 +10,149 @@ import {
   throwError,
   tap,
   catchError,
-  retry,
 } from 'rxjs';
-import { TokenService } from './token.service';
-import { Router } from '@angular/router';
 
-export interface User {
-  id: number;
+// Interfaces for request/response types
+export interface SignupRequest {
   name: string;
   email: string;
+  password: string;
   clg_name: string;
   phone_no: string;
+}
+
+export interface SignupResponse {
+  message: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  token: string;
+  role: string[];
+  message: string;
+  username: string;
+}
+
+export interface DashboardResponse {
+  roles: string[];
+  email: string;
+  message: string;
+  username: string;
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private userSubject = new BehaviorSubject<User | null>(null);
-  public user$ = this.userSubject.asObservable();
+  private apiUrl = 'http://localhost:8080/api/auth';
+  private tokenKey = 'sports_jwt_token';
+  private authState = new BehaviorSubject<boolean>(false);
+  private userData = new BehaviorSubject<{ email: string; username: string } | null>(null);
 
-  // Changed to relative URL to work with proxy configuration
-  private apiUrl = '/api';
+  constructor(private http: HttpClient) {
+    // Initialize auth state from localStorage
+    this.authState.next(this.isLoggedIn());
+    if (this.isLoggedIn()) {
+      this.getDashboard().subscribe();
+    }
+  }
 
-  constructor(
-    private http: HttpClient,
-    private tokenService: TokenService,
-    private router: Router
-  ) {
-    this.loadUser();
-    console.log('AuthService initialized with API URL:', this.apiUrl);
+  // Get auth state as observable
+  get isAuthenticated$() {
+    return this.authState.asObservable();
+  }
+
+  // Get user data as observable
+  get userData$() {
+    return this.userData.asObservable();
+  }
+
+  // Signup new user
+  signup(userData: SignupRequest): Observable<SignupResponse> {
+    return this.http
+      .post<SignupResponse>(`${this.apiUrl}/signup`, userData)
+      .pipe(catchError(this.handleError));
+  }
+
+  // Login user
+  login(credentials: LoginRequest): Observable<LoginResponse> {
+    return this.http
+      .post<LoginResponse>(`${this.apiUrl}/login`, credentials)
+      .pipe(
+        tap((response) => {
+          this.saveToken(response.token);
+          this.authState.next(true);
+          this.userData.next({
+            email: credentials.email,
+            username: response.username,
+          });
+        }),
+        catchError(this.handleError)
+      );
+  }
+
+  // Get dashboard data
+  getDashboard(): Observable<DashboardResponse> {
+    const headers = this.getAuthHeaders();
+    return this.http
+      .get<DashboardResponse>(`${this.apiUrl}/dashboard`, { headers })
+      .pipe(
+        tap((response) => {
+          this.userData.next({
+            email: response.email,
+            username: response.username,
+          });
+        }),
+        catchError(this.handleError)
+      );
+  }
+
+  // Logout user
+  logout(): void {
+    localStorage.removeItem(this.tokenKey);
+    this.authState.next(false);
+    this.userData.next(null);
+  }
+
+  // Check if user is logged in
+  isLoggedIn(): boolean {
+    return !!localStorage.getItem(this.tokenKey);
+  }
+
+  // Get current JWT token
+  getToken(): string | null {
+    return localStorage.getItem(this.tokenKey);
+  }
+
+  // Private helper methods
+  private saveToken(token: string): void {
+    localStorage.setItem(this.tokenKey, token);
+  }
+
+  private getAuthHeaders(): HttpHeaders {
+    const token = this.getToken();
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    });
   }
 
   private handleError(error: HttpErrorResponse) {
-    console.error('API Error:', error);
-
-    if (error.status === 0) {
-      console.error('Network error details:', {
-        message: error.message,
-        name: error.name,
-        error: error.error,
-      });
-      return throwError(
-        () => new Error('Network error - please check your connection')
-      );
+    let errorMessage = 'An error occurred';
+    
+    if (error.error instanceof ErrorEvent) {
+      // Client-side error
+      errorMessage = error.error.message;
+    } else {
+      // Server-side error
+      errorMessage = error.error?.message || `Error Code: ${error.status}\nMessage: ${error.message}`;
     }
-
-    if (error.status === 404) {
-      return throwError(() => new Error('API endpoint not found'));
-    }
-
-    const errorMessage = error.error?.message || 'Server error';
+    
+    console.error(errorMessage);
     return throwError(() => new Error(errorMessage));
-  }
-
-  loadUser(): void {
-    const token = this.tokenService.getToken();
-    if (token) {
-      this.getCurrentUser().subscribe({
-        next: (user) => this.userSubject.next(user),
-        error: () => {
-          this.tokenService.removeToken();
-          this.userSubject.next(null);
-        },
-      });
-    }
-  }
-
-  getCurrentUser(): Observable<User> {
-    return this.http
-      .get<User>(`${this.apiUrl}/auth/me`)
-      .pipe(catchError(this.handleError.bind(this)));
-  }
-
-  login(
-    email: string,
-    password: string
-  ): Observable<{ token: string; user: User }> {
-    console.log('Login request to:', `${this.apiUrl}/auth/login`);
-    return this.http
-      .post<{ token: string; user: User }>(
-        `${this.apiUrl}/auth/login`,
-        {
-          email,
-          password,
-        },
-        {
-          headers: new HttpHeaders({
-            'Content-Type': 'application/json',
-          }),
-        }
-      )
-      .pipe(
-        tap((response) => {
-          this.tokenService.saveToken(response.token);
-          this.userSubject.next(response.user);
-        }),
-        catchError(this.handleError.bind(this))
-      );
-  }
-
-  register(
-    name: string,
-    email: string,
-    password: string,
-    clg_name: string,
-    phone_no: string
-  ): Observable<{ token: string; user: User }> {
-    console.log('Register request to:', `${this.apiUrl}/auth/register`);
-    console.log('Register payload:', { name, email, password: '***', clg_name, phone_no });
-
-    return this.http
-      .post<{ token: string; user: User }>(
-        `${this.apiUrl}/auth/register`,
-        {
-          name,
-          email,
-          password,
-          clg_name,
-          phone_no,
-        },
-        {
-          headers: new HttpHeaders({
-            'Content-Type': 'application/json',
-          }),
-        }
-      )
-      .pipe(
-        retry(1), // Retry once before failing
-        tap((response) => {
-          console.log('Register success response:', response);
-          this.tokenService.saveToken(response.token);
-          this.userSubject.next(response.user);
-        }),
-        catchError(this.handleError.bind(this))
-      );
-  }
-
-  logout(): void {
-    this.tokenService.removeToken();
-    this.userSubject.next(null);
-    this.router.navigate(['/login']);
-  }
-
-  isAuthenticated(): boolean {
-    return !!this.tokenService.getToken();
   }
 }

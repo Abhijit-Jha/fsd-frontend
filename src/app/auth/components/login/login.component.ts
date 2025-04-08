@@ -7,7 +7,7 @@ import {
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../services/auth.service';
+import { AuthService, LoginRequest, LoginResponse } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -34,7 +34,7 @@ export class LoginComponent implements OnInit {
   initForm(): void {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
+      password: ['', [Validators.required]],
     });
   }
 
@@ -47,28 +47,18 @@ export class LoginComponent implements OnInit {
     this.errorMessage = '';
 
     const { email, password } = this.loginForm.value;
+    const loginData: LoginRequest = { email, password };
 
-    console.log('Attempting login with:', { email, password: '***' });
-
-    this.authService.login(email, password).subscribe({
-      next: (response) => {
-        console.log('Login successful:', response);
+    this.authService.login(loginData).subscribe({
+      next: (response: LoginResponse) => {
+        console.log('Login successful', response);
         this.isSubmitting = false;
-        // Navigate to dashboard on successful login
         this.router.navigate(['/dashboard']);
       },
-      error: (error) => {
+      error: (error: Error) => {
         console.error('Login error:', error);
         this.isSubmitting = false;
-
-        if (error.status === 401) {
-          this.errorMessage = 'Invalid email or password. Please try again.';
-        } else if (error.status === 0) {
-          this.errorMessage = 'Network error. Please check your connection.';
-        } else {
-          this.errorMessage =
-            error?.message || 'Login failed. Please try again.';
-        }
+        this.errorMessage = error.message || 'Login failed. Please try again later.';
       },
     });
   }

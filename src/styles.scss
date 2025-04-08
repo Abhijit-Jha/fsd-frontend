@@ -2,21 +2,21 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
 
 :root {
-  --primary-color: #6200ea;
-  --primary-light: #9d46ff;
-  --primary-dark: #0a00b6;
-  --secondary-color: #00bcd4;
-  --secondary-light: #62efff;
-  --secondary-dark: #008ba3;
-  --text-color: #263238;
-  --text-light: #546e7a;
+  --primary-color: #2e7d32;
+  --primary-light: #4caf50;
+  --primary-dark: #1b5e20;
+  --secondary-color: #81c784;
+  --secondary-light: #a5d6a7;
+  --secondary-dark: #519657;
+  --text-color: #1b1b1b;
+  --text-light: #4a4a4a;
   --light-text: #fff;
   --bg-color: #f5f7fa;
-  --card-bg: rgba(255, 255, 255, 0.92);
+  --card-bg: rgba(255, 255, 255, 0.95);
   --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --success-color: #4caf50;
+  --success-color: #2e7d32;
   --warning-color: #ff9800;
-  --error-color: #f44336;
+  --error-color: #d32f2f;
 }
 
 * {
@@ -62,15 +62,16 @@ body::before {
   padding: 25px;
   margin-bottom: 25px;
   transition: transform 0.3s, box-shadow 0.3s;
+  border: 1px solid rgba(76, 175, 80, 0.1);
 
   &:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 8px 24px rgba(76, 175, 80, 0.15);
   }
 }
 
 button {
-  background-color: var(--primary-color);
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
   color: var(--light-text);
   border: none;
   padding: 12px 24px;
@@ -79,11 +80,18 @@ button {
   font-size: 16px;
   font-weight: 500;
   transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
 
   &:hover {
-    background-color: var(--primary-light);
+    background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
     transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(98, 0, 234, 0.3);
+    box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
+  }
+
+  &:active {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
+    transform: translateY(0);
   }
 
   &:disabled {
@@ -118,14 +126,14 @@ textarea {
   &:focus {
     outline: none;
     border-color: var(--primary-light);
-    box-shadow: 0 0 0 3px rgba(98, 0, 234, 0.1);
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
   }
 
   &.is-invalid {
     border-color: var(--error-color);
 
     &:focus {
-      box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1);
+      box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
     }
   }
 }
@@ -165,14 +173,81 @@ label {
   margin-bottom: 20px;
 
   &.alert-danger {
-    background-color: rgba(244, 67, 54, 0.1);
+    background-color: rgba(211, 47, 47, 0.1);
     color: var(--error-color);
     border-left: 4px solid var(--error-color);
   }
 
   &.alert-success {
-    background-color: rgba(76, 175, 80, 0.1);
+    background-color: rgba(46, 125, 50, 0.1);
     color: var(--success-color);
     border-left: 4px solid var(--success-color);
+  }
+}
+
+// Section styles
+.section {
+  padding: 6rem 2rem;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-color);
+  
+  &:nth-child(even) {
+    background-color: var(--card-bg);
+  }
+}
+
+.section-content {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  text-align: center;
+  
+  h2 {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    color: var(--text-color);
+    position: relative;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50px;
+      height: 3px;
+      background: var(--primary-color);
+    }
+  }
+}
+
+// Animation classes
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  
+  &.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Smooth scrolling
+html {
+  scroll-behavior: smooth;
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .section {
+    padding: 4rem 1rem;
+    
+    h2 {
+      font-size: 2rem;
+    }
   }
 }

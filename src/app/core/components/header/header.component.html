@@ -1,30 +1,15 @@
-<header class="header">
-  <div class="header-container">
+<header [@headerAnimation]="headerState" class="header">
+  <nav class="nav-container">
     <div class="logo">
-      <a routerLink="/">Participation</a>
+      <a routerLink="/">SportsHub</a>
     </div>
-    <nav class="nav-links">
-      <a
-        routerLink="/"
-        routerLinkActive="active"
-        [routerLinkActiveOptions]="{ exact: true }"
-        >Home</a
-      >
-      <a *ngIf="!isLoggedIn" routerLink="/login" routerLinkActive="active"
-        >Login</a
-      >
-      <a *ngIf="!isLoggedIn" routerLink="/register" routerLinkActive="active"
-        >Register</a
-      >
-      <a *ngIf="isLoggedIn" routerLink="/dashboard" routerLinkActive="active"
-        >Dashboard</a
-      >
-      <a *ngIf="isLoggedIn" routerLink="/profile" routerLinkActive="active"
-        >Profile</a
-      >
-      <a *ngIf="isLoggedIn" href="javascript:void(0)" (click)="logout()"
-        >Logout</a
-      >
-    </nav>
-  </div>
+    <div class="auth-buttons" *ngIf="!isLoggedIn">
+      <a routerLink="/login" class="btn btn-outline">Login</a>
+      <a routerLink="/register" class="btn btn-primary">Register</a>
+    </div>
+    <div class="auth-buttons" *ngIf="isLoggedIn">
+      <a routerLink="/dashboard" class="btn btn-primary">Dashboard</a>
+      <button (click)="logout()" class="btn btn-outline">Logout</button>
+    </div>
+  </nav>
 </header>
