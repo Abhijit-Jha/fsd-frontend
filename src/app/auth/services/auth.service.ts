@@ -19,6 +19,8 @@ export interface User {
   id: number;
   name: string;
   email: string;
+  clg_name: string;
+  phone_no: string;
 }
 
 @Injectable({
@@ -111,10 +113,12 @@ export class AuthService {
   register(
     name: string,
     email: string,
-    password: string
+    password: string,
+    clg_name: string,
+    phone_no: string
   ): Observable<{ token: string; user: User }> {
     console.log('Register request to:', `${this.apiUrl}/auth/register`);
-    console.log('Register payload:', { name, email, password: '***' });
+    console.log('Register payload:', { name, email, password: '***', clg_name, phone_no });
 
     return this.http
       .post<{ token: string; user: User }>(
@@ -123,6 +127,8 @@ export class AuthService {
           name,
           email,
           password,
+          clg_name,
+          phone_no,
         },
         {
           headers: new HttpHeaders({
@@ -148,6 +154,6 @@ export class AuthService {
   }
 
   isAuthenticated(): boolean {
-    return this.tokenService.getToken() !== null;
+    return !!this.tokenService.getToken();
   }
 }

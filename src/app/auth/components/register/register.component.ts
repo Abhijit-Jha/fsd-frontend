@@ -38,6 +38,8 @@ export class RegisterComponent implements OnInit {
         email: ['', [Validators.required, Validators.email]],
         password: ['', [Validators.required, Validators.minLength(6)]],
         confirmPassword: ['', [Validators.required]],
+        clg_name: ['', [Validators.required, Validators.minLength(3)]],
+        phone_no: ['', [Validators.required, Validators.pattern('^[0-9]*$')]],
       },
       {
         validators: this.passwordMatchValidator,
@@ -67,15 +69,17 @@ export class RegisterComponent implements OnInit {
     this.isSubmitting = true;
     this.errorMessage = '';
 
-    const { name, email, password } = this.registerForm.value;
+    const { name, email, password, clg_name, phone_no } = this.registerForm.value;
 
     console.log('Submitting registration form:', {
       name,
       email,
       password: '****',
+      clg_name,
+      phone_no,
     });
 
-    this.authService.register(name, email, password).subscribe({
+    this.authService.register(name, email, password, clg_name, phone_no).subscribe({
       next: (response) => {
         console.log('Registration successful', response);
         this.isSubmitting = false;
@@ -114,5 +118,11 @@ export class RegisterComponent implements OnInit {
   }
   get confirmPassword() {
     return this.registerForm.get('confirmPassword');
+  }
+  get clg_name() {
+    return this.registerForm.get('clg_name');
+  }
+  get phone_no() {
+    return this.registerForm.get('phone_no');
   }
 }
